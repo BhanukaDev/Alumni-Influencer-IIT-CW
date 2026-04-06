@@ -50,6 +50,8 @@ export type SessionResponse = {
   authenticated: boolean
   userId?: number
   role?: string
+  name?: string | null
+  imageUrl?: string | null
 }
 
 export type FeaturedAlumnus = {
@@ -61,8 +63,9 @@ export type FeaturedAlumnus = {
   windowDate: string
 }
 
-type FeaturedAlumnusResponse = {
+export type FeaturedAlumnusResponse = {
   featuredAlumnus: FeaturedAlumnus | null
+  upcomingAlumnus: FeaturedAlumnus | null
 }
 
 type ApiErrorResponse = {
@@ -271,13 +274,12 @@ export async function logoutAlumni(): Promise<MessageResponse> {
   return (await response.json()) as MessageResponse
 }
 
-export async function getTodayFeaturedAlumnus(): Promise<FeaturedAlumnus | null> {
+export async function getTodayFeaturedAlumnus(): Promise<FeaturedAlumnusResponse> {
   const response = await fetch(`${API_BASE_URL}/api/v1/alumni/today`)
 
   if (!response.ok) {
     throw new Error('Could not load featured alumnus')
   }
 
-  const data = (await response.json()) as FeaturedAlumnusResponse
-  return data.featuredAlumnus
+  return (await response.json()) as FeaturedAlumnusResponse
 }

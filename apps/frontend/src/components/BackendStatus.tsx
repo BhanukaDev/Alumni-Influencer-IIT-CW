@@ -36,18 +36,19 @@ const refreshBackendStatus = async () => {
 
 void refreshBackendStatus()
 
-function BackendStatus() {
+function BackendStatusIndicator() {
   const status = useSyncExternalStore(subscribe, getSnapshot)
+  const statusClassName = status === 'ok' ? 'backend-status-indicator is-ok' : 'backend-status-indicator is-warning'
 
   return (
-    <section className="section">
-      <h2>Backend</h2>
-      <p>Status: {status}</p>
-      <button type="button" onClick={() => void refreshBackendStatus()}>
-        Re-check
-      </button>
-    </section>
+    <button
+      type="button"
+      className={statusClassName}
+      title={`Backend status: ${status}`}
+      aria-label={`Backend status: ${status}`}
+      onClick={() => void refreshBackendStatus()}
+    />
   )
 }
 
-export default BackendStatus
+export default BackendStatusIndicator

@@ -1,6 +1,9 @@
 import cron from 'node-cron';
 import prisma from '../lib/prisma';
 
+const BIDDING_TIMEZONE = process.env.BIDDING_TIMEZONE ?? 'Asia/Colombo';
+const BIDDING_TEST_OFFSET_MINUTES = Number(process.env.BIDDING_TEST_OFFSET_MINUTES ?? '0');
+
 function startOfDay(date: Date): Date {
   const value = new Date(date);
   value.setHours(0, 0, 0, 0);
@@ -119,26 +122,56 @@ export async function runMonthlyCounterReset(now: Date = new Date()): Promise<vo
   );
 }
 
+function registerTestWinnerSelectionTimer(): void {
+  if (process.env.NODE_ENV === 'production') {
+    return;
+  }
+
+  if (!Number.isFinite(BIDDING_TEST_OFFSET_MINUTES) || BIDDING_TEST_OFFSET_MINUTES <= 0) {
+    return;
+  }
+
+  const delayMs = Math.round(BIDDING_TEST_OFFSET_MINUTES * 60 * 1000);
+  const runAt = new Date(Date.now() + delayMs);
+
+  console.log(
+    `[jobs] Test winner selection scheduled for ${runAt.toISOString()} (${BIDDING_TEST_OFFSET_MINUTES} minutes from now)`,
+  );
+
+  setTimeout(() => {
+    void runDailyWinnerSelection()
+      .then(() => {
+        console.log('[jobs] Test winner selection completed');
+      })
+      .catch((error) => {
+        console.error('[jobs] Test winner selection failed', error);
+      });
+  }, delayMs);
+}
+
 export function registerBiddingJobs(): void {
-  cron.schedule('51 12 * * *', async () => {
+  // Select the winner when bidding closes at 6:00 PM local time.
+  cron.schedule('0 18 * * *', async () => {
     try {
       await runDailyWinnerSelection();
-      console.log('[jobs] Daily bidding winner selection completed');
+      console.log(`[jobs] Daily bidding winner selection completed (${BIDDING_TIMEZONE})`);
     } catch (error) {
       console.error('[jobs] Daily bidding winner selection failed', error);
     }
-  });
+  }, { timezone: BIDDING_TIMEZONE });
 
   cron.schedule('0 0 1 * *', async () => {
     try {
       await runMonthlyCounterReset();
-      console.log('[jobs] Monthly appearance counter reset completed');
+      console.log(`[jobs] Monthly appearance counter reset completed (${BIDDING_TIMEZONE})`);
     } catch (error) {
       console.error('[jobs] Monthly appearance counter reset failed', error);
     }
-  });
+  }, { timezone: BIDDING_TIMEZONE });
 
   void runMonthlyCounterReset().catch((error) => {
     console.error('[jobs] Monthly appearance counter initialization failed', error);
   });
+
+  registerTestWinnerSelectionTimer();
 }

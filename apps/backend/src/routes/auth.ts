@@ -129,16 +129,31 @@ router.post('/login', async (req: Request, res: Response) => {
 });
 
 // GET /auth/session
-router.get('/session', (req: Request, res: Response) => {
+router.get('/session', async (req: Request, res: Response) => {
   if (!req.session.userId) {
     res.json({ authenticated: false });
     return;
   }
 
+  const user = await prisma.user.findUnique({
+    where: { id: req.session.userId },
+    select: {
+      name: true,
+      email: true,
+      profile: {
+        select: {
+          imageUrl: true,
+        },
+      },
+    },
+  });
+
   res.json({
     authenticated: true,
     userId: req.session.userId,
     role: req.session.role,
+    name: user?.name ?? user?.email ?? null,
+    imageUrl: user?.profile?.imageUrl ?? null,
   });
 });
 

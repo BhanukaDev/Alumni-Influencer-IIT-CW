@@ -31,6 +31,9 @@ export async function sendVerificationEmail(to: string, token: string): Promise<
   const t = await getTransporter();
   const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:5173';
   const url = `${frontendUrl}/verify-email?token=${token}`;
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('[email] Verification link:', url);
+  }
   const info = await t.sendMail({
     from: process.env.EMAIL_FROM ?? 'noreply@alumni.ac.uk',
     to,
@@ -46,6 +49,9 @@ export async function sendPasswordResetEmail(to: string, token: string): Promise
   const t = await getTransporter();
   const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:5173';
   const url = `${frontendUrl}/reset-password?token=${token}`;
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('[email] Reset link:', url);
+  }
   const info = await t.sendMail({
     from: process.env.EMAIL_FROM ?? 'noreply@alumni.ac.uk',
     to,
