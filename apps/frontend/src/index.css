@@ -28,12 +28,19 @@ nav.page {
 	padding: 8px 0;
 }
 
+.form-row {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 10px;
+}
+
 label {
 	display: grid;
 	gap: 4px;
 }
 
 input,
+textarea,
 button {
 	padding: 8px;
 	font: inherit;

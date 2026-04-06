@@ -45,6 +45,12 @@ type LoginResponse = {
   role: string
 }
 
+export type SessionResponse = {
+  authenticated: boolean
+  userId?: number
+  role?: string
+}
+
 type ApiErrorResponse = {
   error: string | Record<string, string[] | undefined>
 }
@@ -224,6 +230,31 @@ export async function resetPassword(token: string, password: string): Promise<Me
     if (typeof data.error === 'string') throw new Error(data.error)
     const messages = Object.values(data.error).flatMap((v) => v ?? []).filter((v) => v.length > 0)
     throw new Error(messages[0] ?? 'Reset failed')
+  }
+
+  return (await response.json()) as MessageResponse
+}
+
+export async function getAuthSession(): Promise<SessionResponse> {
+  const response = await fetch(`${API_BASE_URL}/auth/session`, {
+    credentials: 'include',
+  })
+
+  if (!response.ok) {
+    throw new Error('Could not check auth session')
+  }
+
+  return (await response.json()) as SessionResponse
+}
+
+export async function logoutAlumni(): Promise<MessageResponse> {
+  const response = await fetch(`${API_BASE_URL}/auth/logout`, {
+    method: 'POST',
+    credentials: 'include',
+  })
+
+  if (!response.ok) {
+    throw new Error('Could not log out')
   }
 
   return (await response.json()) as MessageResponse

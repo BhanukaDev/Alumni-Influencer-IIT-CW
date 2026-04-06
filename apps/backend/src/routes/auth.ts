@@ -126,6 +126,20 @@ router.post('/login', async (req: Request, res: Response) => {
   res.json({ message: 'Logged in', role: user.role });
 });
 
+// GET /auth/session
+router.get('/session', (req: Request, res: Response) => {
+  if (!req.session.userId) {
+    res.json({ authenticated: false });
+    return;
+  }
+
+  res.json({
+    authenticated: true,
+    userId: req.session.userId,
+    role: req.session.role,
+  });
+});
+
 // POST /auth/logout
 router.post('/logout', (req: Request, res: Response) => {
   req.session.destroy((err) => {

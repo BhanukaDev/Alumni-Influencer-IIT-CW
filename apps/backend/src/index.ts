@@ -6,10 +6,10 @@ import rateLimit from 'express-rate-limit';
 import morgan from 'morgan';
 import session from 'express-session';
 import Database from 'better-sqlite3';
-import { z } from 'zod';
 import prisma from './lib/prisma';
 import { errorHandler, notFound } from './middleware/errorHandler';
 import authRouter from './routes/auth';
+import profileRouter from './routes/profile';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const BetterSqliteStore = require('better-sqlite3-session-store') as (
@@ -22,16 +22,6 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') ?? [
   'http://localhost:5173',
   'http://localhost:3000',
 ];
-
-const profileSchema = z.object({
-  fullName: z.string().min(1, 'fullName is required').max(200),
-  email: z.string().email('email must be valid').max(320),
-});
-
-const campaignSchema = z.object({
-  topic: z.string().min(1, 'topic is required').max(200),
-  budget: z.number().nonnegative('budget must be zero or greater'),
-});
 
 app.use(helmet());
 app.use(
@@ -73,6 +63,7 @@ app.use(
 );
 
 app.use('/auth', authRouter);
+app.use('/profile', profileRouter);
 
 app.get('/health', async (_req, res) => {
   try {
@@ -101,40 +92,18 @@ app.get('/campaign-submissions', async (_req, res) => {
   return res.json({ items: campaigns });
 });
 
-app.post('/profile', async (req, res) => {
-  const parsed = profileSchema.safeParse(req.body);
-
-  if (!parsed.success) {
-    return res.status(400).json({ error: parsed.error.flatten().fieldErrors });
-  }
-
-  const profile = await prisma.profileSubmission.create({
-    data: {
-      fullName: parsed.data.fullName,
-      email: parsed.data.email.toLowerCase(),
-    },
-  });
-
-  return res.status(201).json({
-    message: 'Profile saved',
-    profile,
-  });
-});
-
 app.post('/campaign', async (req, res) => {
-  const parsed = campaignSchema.safeParse({
-    topic: req.body?.topic,
-    budget: Number(req.body?.budget),
-  });
+  const topic = typeof req.body?.topic === 'string' ? req.body.topic : '';
+  const budget = Number(req.body?.budget);
 
-  if (!parsed.success) {
-    return res.status(400).json({ error: parsed.error.flatten().fieldErrors });
+  if (!topic || Number.isNaN(budget) || budget < 0) {
+    return res.status(400).json({ error: 'Invalid campaign payload' });
   }
 
   const campaign = await prisma.campaignSubmission.create({
     data: {
-      topic: parsed.data.topic,
-      budget: parsed.data.budget,
+      topic,
+      budget,
     },
   });
 
