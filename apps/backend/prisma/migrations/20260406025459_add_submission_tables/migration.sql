@@ -1,0 +1,15 @@
+-- CreateTable
+CREATE TABLE "ProfileSubmission" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "fullName" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- CreateTable
+CREATE TABLE "CampaignSubmission" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "topic" TEXT NOT NULL,
+    "budget" REAL NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
