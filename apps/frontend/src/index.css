@@ -34,6 +34,11 @@ nav.page {
 	gap: 10px;
 }
 
+.button-row {
+	display: flex;
+	gap: 10px;
+}
+
 label {
 	display: grid;
 	gap: 4px;

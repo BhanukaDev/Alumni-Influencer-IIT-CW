@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import { registerAlumni } from '../services/api'
 
 function RegisterPage() {
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -16,8 +17,9 @@ function RegisterPage() {
 
     try {
       setIsSubmitting(true)
-      const result = await registerAlumni({ email, password })
+      const result = await registerAlumni({ name, email, password })
       setMessage(result.message)
+      setName('')
       setEmail('')
       setPassword('')
     } catch (submitError) {
@@ -33,6 +35,17 @@ function RegisterPage() {
       <h1>Register</h1>
 
       <form onSubmit={onSubmit} className="form" noValidate>
+        <label htmlFor="register-name">Name</label>
+        <input
+          id="register-name"
+          name="name"
+          type="text"
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          autoComplete="name"
+          required
+        />
+
         <label htmlFor="register-email">Email</label>
         <input
           id="register-email"

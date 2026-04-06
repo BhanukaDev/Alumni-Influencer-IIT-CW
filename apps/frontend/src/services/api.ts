@@ -27,6 +27,7 @@ export type CampaignSubmission = {
 }
 
 export type RegisterRequest = {
+  name: string
   email: string
   password: string
 }
@@ -51,6 +52,19 @@ export type SessionResponse = {
   role?: string
 }
 
+export type FeaturedAlumnus = {
+  userId: number
+  name: string
+  bio?: string | null
+  linkedinUrl?: string | null
+  imageUrl?: string | null
+  windowDate: string
+}
+
+type FeaturedAlumnusResponse = {
+  featuredAlumnus: FeaturedAlumnus | null
+}
+
 type ApiErrorResponse = {
   error: string | Record<string, string[] | undefined>
 }
@@ -64,6 +78,36 @@ type CampaignSubmissionListResponse = {
 }
 
 const API_BASE_URL = 'http://localhost:3000'
+
+async function readApiError(response: Response, fallback: string): Promise<string> {
+  const contentType = response.headers.get('content-type') ?? ''
+
+  if (contentType.includes('application/json')) {
+    try {
+      const data = (await response.json()) as ApiErrorResponse
+      if (typeof data.error === 'string') {
+        return data.error
+      }
+
+      const messages = Object.values(data.error)
+        .flatMap((value) => value ?? [])
+        .filter((value) => value.length > 0)
+
+      if (messages.length > 0) {
+        return messages[0]
+      }
+    } catch {
+      return fallback
+    }
+  }
+
+  try {
+    const text = await response.text()
+    return text || fallback
+  } catch {
+    return fallback
+  }
+}
 
 export async function getBackendHealth(): Promise<HealthResponse> {
   const response = await fetch(`${API_BASE_URL}/health`)
@@ -139,16 +183,7 @@ export async function registerAlumni(payload: RegisterRequest): Promise<MessageR
   })
 
   if (!response.ok) {
-    const data = (await response.json()) as ApiErrorResponse
-    if (typeof data.error === 'string') {
-      throw new Error(data.error)
-    }
-
-    const messages = Object.values(data.error)
-      .flatMap((value) => value ?? [])
-      .filter((value) => value.length > 0)
-
-    throw new Error(messages[0] ?? 'Registration failed')
+    throw new Error(await readApiError(response, 'Registration failed'))
   }
 
   return (await response.json()) as MessageResponse
@@ -165,16 +200,7 @@ export async function loginAlumni(payload: LoginRequest): Promise<LoginResponse>
   })
 
   if (!response.ok) {
-    const data = (await response.json()) as ApiErrorResponse
-    if (typeof data.error === 'string') {
-      throw new Error(data.error)
-    }
-
-    const messages = Object.values(data.error)
-      .flatMap((value) => value ?? [])
-      .filter((value) => value.length > 0)
-
-    throw new Error(messages[0] ?? 'Login failed')
+    throw new Error(await readApiError(response, 'Login failed'))
   }
 
   return (await response.json()) as LoginResponse
@@ -186,16 +212,7 @@ export async function verifyEmail(token: string): Promise<MessageResponse> {
   )
 
   if (!response.ok) {
-    const data = (await response.json()) as ApiErrorResponse
-    if (typeof data.error === 'string') {
-      throw new Error(data.error)
-    }
-
-    const messages = Object.values(data.error)
-      .flatMap((value) => value ?? [])
-      .filter((value) => value.length > 0)
-
-    throw new Error(messages[0] ?? 'Email verification failed')
+    throw new Error(await readApiError(response, 'Email verification failed'))
   }
 
   return (await response.json()) as MessageResponse
@@ -209,10 +226,7 @@ export async function forgotPassword(email: string): Promise<MessageResponse> {
   })
 
   if (!response.ok) {
-    const data = (await response.json()) as ApiErrorResponse
-    if (typeof data.error === 'string') throw new Error(data.error)
-    const messages = Object.values(data.error).flatMap((v) => v ?? []).filter((v) => v.length > 0)
-    throw new Error(messages[0] ?? 'Request failed')
+    throw new Error(await readApiError(response, 'Request failed'))
   }
 
   return (await response.json()) as MessageResponse
@@ -226,10 +240,7 @@ export async function resetPassword(token: string, password: string): Promise<Me
   })
 
   if (!response.ok) {
-    const data = (await response.json()) as ApiErrorResponse
-    if (typeof data.error === 'string') throw new Error(data.error)
-    const messages = Object.values(data.error).flatMap((v) => v ?? []).filter((v) => v.length > 0)
-    throw new Error(messages[0] ?? 'Reset failed')
+    throw new Error(await readApiError(response, 'Reset failed'))
   }
 
   return (await response.json()) as MessageResponse
@@ -258,4 +269,15 @@ export async function logoutAlumni(): Promise<MessageResponse> {
   }
 
   return (await response.json()) as MessageResponse
+}
+
+export async function getTodayFeaturedAlumnus(): Promise<FeaturedAlumnus | null> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/alumni/today`)
+
+  if (!response.ok) {
+    throw new Error('Could not load featured alumnus')
+  }
+
+  const data = (await response.json()) as FeaturedAlumnusResponse
+  return data.featuredAlumnus
 }

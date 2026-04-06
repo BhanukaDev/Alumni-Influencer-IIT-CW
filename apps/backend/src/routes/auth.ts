@@ -11,6 +11,7 @@ const SALT_ROUNDS = 12;
 const ALLOWED_DOMAIN = process.env.ALLOWED_EMAIL_DOMAIN ?? 'iit.ac.lk';
 
 const registerSchema = z.object({
+  name: z.string().trim().min(1, 'Name is required').max(120),
   email: z
     .string()
     .email()
@@ -52,7 +53,7 @@ router.post('/register', async (req: Request, res: Response) => {
     return;
   }
 
-  const { email, password } = parsed.data;
+  const { name, email, password } = parsed.data;
   const existing = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
   if (existing) {
     res.status(409).json({ error: 'Email already registered' });
@@ -65,6 +66,7 @@ router.post('/register', async (req: Request, res: Response) => {
 
   await prisma.user.create({
     data: {
+      name,
       email: email.toLowerCase(),
       passwordHash,
       verifyToken,

@@ -6,10 +6,13 @@ import rateLimit from 'express-rate-limit';
 import morgan from 'morgan';
 import session from 'express-session';
 import Database from 'better-sqlite3';
+import { registerBiddingJobs } from './jobs/biddingJobs';
 import prisma from './lib/prisma';
 import { errorHandler, notFound } from './middleware/errorHandler';
 import authRouter from './routes/auth';
+import biddingRouter from './routes/bidding';
 import profileRouter from './routes/profile';
+import publicRouter from './routes/public';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const BetterSqliteStore = require('better-sqlite3-session-store') as (
@@ -40,6 +43,9 @@ app.use(
     max: 100,
     standardHeaders: true,
     legacyHeaders: false,
+    handler: (_req, res) => {
+      res.status(429).json({ error: 'Too many requests, please try again later.' });
+    },
   }),
 );
 
@@ -63,6 +69,8 @@ app.use(
 );
 
 app.use('/auth', authRouter);
+app.use('/api/v1', publicRouter);
+app.use('/bidding', biddingRouter);
 app.use('/profile', profileRouter);
 
 app.get('/health', async (_req, res) => {
@@ -115,6 +123,8 @@ app.post('/campaign', async (req, res) => {
 
 app.use(notFound);
 app.use(errorHandler);
+
+registerBiddingJobs();
 
 app.listen(port, () => {
   console.log(`Server listening on port ${port}`);
