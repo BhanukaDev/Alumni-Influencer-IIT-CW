@@ -8,6 +8,12 @@
 .page {
 	max-width: 720px;
 	margin: 0 auto;
+	padding: 8px;
+}
+
+nav.page {
+	padding-top: 12px;
+	padding-bottom: 12px;
 }
 
 .section {
@@ -19,6 +25,7 @@
 .form {
 	display: grid;
 	gap: 10px;
+	padding: 8px 0;
 }
 
 label {

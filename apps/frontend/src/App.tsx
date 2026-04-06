@@ -1,10 +1,17 @@
 import BackendStatus from './components/BackendStatus'
 import CampaignForm from './components/forms/CampaignForm'
 import ProfileForm from './components/forms/ProfileForm'
+import EmailVerificationPage from './pages/EmailVerificationPage'
+import ForgotPasswordPage from './pages/ForgotPasswordPage'
+import LoginPage from './pages/LoginPage'
+import RegisterPage from './pages/RegisterPage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
 import './index.css'
 
 function App() {
-  return (
+  const path = window.location.pathname
+
+  let page = (
     <main className="page">
       <h1>Alumni Influencer</h1>
 
@@ -20,6 +27,27 @@ function App() {
         <CampaignForm />
       </section>
     </main>
+  )
+
+  if (path === '/verify-email') {
+    page = <EmailVerificationPage />
+  } else if (path === '/forgot-password') {
+    page = <ForgotPasswordPage />
+  } else if (path === '/reset-password') {
+    page = <ResetPasswordPage />
+  } else if (path === '/login') {
+    page = <LoginPage />
+  } else if (path === '/register') {
+    page = <RegisterPage />
+  }
+
+  return (
+    <>
+      <nav className="page" aria-label="Main navigation">
+        <a href="/">Home</a> | <a href="/register">Register</a> | <a href="/login">Login</a>
+      </nav>
+      {page}
+    </>
   )
 }
 

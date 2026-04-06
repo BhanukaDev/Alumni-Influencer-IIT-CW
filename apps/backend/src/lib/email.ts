@@ -29,7 +29,8 @@ async function getTransporter(): Promise<nodemailer.Transporter> {
 
 export async function sendVerificationEmail(to: string, token: string): Promise<void> {
   const t = await getTransporter();
-  const url = `${process.env.BASE_URL}/auth/verify-email?token=${token}`;
+  const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:5173';
+  const url = `${frontendUrl}/verify-email?token=${token}`;
   const info = await t.sendMail({
     from: process.env.EMAIL_FROM ?? 'noreply@alumni.ac.uk',
     to,
@@ -43,7 +44,8 @@ export async function sendVerificationEmail(to: string, token: string): Promise<
 
 export async function sendPasswordResetEmail(to: string, token: string): Promise<void> {
   const t = await getTransporter();
-  const url = `${process.env.BASE_URL}/auth/reset-password?token=${token}`;
+  const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:5173';
+  const url = `${frontendUrl}/reset-password?token=${token}`;
   const info = await t.sendMail({
     from: process.env.EMAIL_FROM ?? 'noreply@alumni.ac.uk',
     to,
