@@ -10,6 +10,43 @@ const router = Router();
 const SALT_ROUNDS = 12;
 const ALLOWED_DOMAIN = process.env.ALLOWED_EMAIL_DOMAIN ?? 'iit.ac.lk';
 
+/**
+ * @swagger
+ * /auth/register:
+ *   post:
+ *     tags:
+ *       - Auth
+ *     summary: Register a new user
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 minLength: 1
+ *                 maxLength: 120
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *                 minLength: 8
+ *             required:
+ *               - name
+ *               - email
+ *               - password
+ *     responses:
+ *       201:
+ *         description: Registered successfully
+ *       400:
+ *         description: Validation error
+ *       409:
+ *         description: Email already registered
+ */
+
 const registerSchema = z.object({
   name: z.string().trim().min(1, 'Name is required').max(120),
   email: z
@@ -79,7 +116,25 @@ router.post('/register', async (req: Request, res: Response) => {
   res.status(201).json({ message: 'Registered. Check your email to verify your account.' });
 });
 
-// GET /auth/verify-email?token=
+/**
+ * @swagger
+ * /auth/verify-email:
+ *   get:
+ *     tags:
+ *       - Auth
+ *     summary: Verify user email
+ *     parameters:
+ *       - in: query
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Email verified successfully
+ *       400:
+ *         description: Invalid or expired token
+ */
 router.get('/verify-email', async (req: Request, res: Response) => {
   const token = req.query.token as string | undefined;
   if (!token) {
@@ -101,7 +156,36 @@ router.get('/verify-email', async (req: Request, res: Response) => {
   res.json({ message: 'Email verified. You can now log in.' });
 });
 
-// POST /auth/login
+/**
+ * @swagger
+ * /auth/login:
+ *   post:
+ *     tags:
+ *       - Auth
+ *     summary: Login to the system
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *             required:
+ *               - email
+ *               - password
+ *     responses:
+ *       200:
+ *         description: Logged in successfully
+ *       401:
+ *         description: Invalid credentials
+ *       403:
+ *         description: Email not verified
+ */
 router.post('/login', async (req: Request, res: Response) => {
   const parsed = loginSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -128,7 +212,35 @@ router.post('/login', async (req: Request, res: Response) => {
   res.json({ message: 'Logged in', role: user.role });
 });
 
-// GET /auth/session
+/**
+ * @swagger
+ * /auth/session:
+ *   get:
+ *     tags:
+ *       - Auth
+ *     summary: Get current session information
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Current session info
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 authenticated:
+ *                   type: boolean
+ *                 userId:
+ *                   type: number
+ *                 role:
+ *                   type: string
+ *                 name:
+ *                   type: string
+ *                 imageUrl:
+ *                   type: string
+ *                   nullable: true
+ */
 router.get('/session', async (req: Request, res: Response) => {
   if (!req.session.userId) {
     res.json({ authenticated: false });
@@ -157,7 +269,21 @@ router.get('/session', async (req: Request, res: Response) => {
   });
 });
 
-// POST /auth/logout
+/**
+ * @swagger
+ * /auth/logout:
+ *   post:
+ *     tags:
+ *       - Auth
+ *     summary: Logout from the system
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Logged out successfully
+ *       500:
+ *         description: Error during logout
+ */
 router.post('/logout', (req: Request, res: Response) => {
   req.session.destroy((err) => {
     if (err) {
@@ -169,7 +295,29 @@ router.post('/logout', (req: Request, res: Response) => {
   });
 });
 
-// POST /auth/forgot-password
+/**
+ * @swagger
+ * /auth/forgot-password:
+ *   post:
+ *     tags:
+ *       - Auth
+ *     summary: Request password reset
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *             required:
+ *               - email
+ *     responses:
+ *       200:
+ *         description: Reset email sent if account exists
+ */
 router.post('/forgot-password', async (req: Request, res: Response) => {
   const parsed = forgotSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -193,7 +341,34 @@ router.post('/forgot-password', async (req: Request, res: Response) => {
   res.json({ message: 'If that email exists, a reset link has been sent.' });
 });
 
-// POST /auth/reset-password
+/**
+ * @swagger
+ * /auth/reset-password:
+ *   post:
+ *     tags:
+ *       - Auth
+ *     summary: Reset password with token
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               token:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *                 minLength: 8
+ *             required:
+ *               - token
+ *               - password
+ *     responses:
+ *       200:
+ *         description: Password reset successfully
+ *       400:
+ *         description: Invalid or expired token
+ */
 router.post('/reset-password', async (req: Request, res: Response) => {
   const parsed = resetSchema.safeParse(req.body);
   if (!parsed.success) {

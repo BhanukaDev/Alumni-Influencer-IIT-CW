@@ -28,8 +28,8 @@ function FeaturedAlumnusCard({
   showName?: boolean
 }) {
   return (
-    <div className="list-section">
-      <div className="featured-alumnus-header">
+    <div className="list-section" style={{ padding: '20px' }}>
+      <div className="featured-alumnus-header" style={{ marginBottom: '16px' }}>
         <span className="featured-alumnus-avatar" aria-hidden="true">
           {alumnus.imageUrl ? (
             <img src={alumnus.imageUrl} alt="" className="featured-alumnus-avatar-image" />
@@ -38,19 +38,19 @@ function FeaturedAlumnusCard({
           )}
         </span>
         <div className="featured-alumnus-meta">
-          <p>{headline}</p>
-          {showName && <p>Name: {alumnus.name}</p>}
-          <p>Featured date: {alumnus.windowDate.slice(0, 10)}</p>
+          <p style={{ fontWeight: 'bold', marginBottom: '4px' }}>{headline}</p>
+          {showName && <p style={{ marginBottom: '4px' }}>Name: {alumnus.name}</p>}
+          <p style={{ color: '#666', fontSize: '14px' }}>Featured date: {alumnus.windowDate.slice(0, 10)}</p>
         </div>
       </div>
-      {alumnus.bio && <p>Bio: {alumnus.bio}</p>}
+      {alumnus.bio && <p style={{ marginBottom: '8px' }}>Bio: {alumnus.bio}</p>}
       {alumnus.linkedinUrl && (
-        <p>
+        <p style={{ marginBottom: '8px' }}>
           LinkedIn: <a href={alumnus.linkedinUrl}>{alumnus.linkedinUrl}</a>
         </p>
       )}
       {alumnus.imageUrl && (
-        <p>
+        <p style={{ marginBottom: '8px' }}>
           Image: <a href={alumnus.imageUrl}>{alumnus.imageUrl}</a>
         </p>
       )}
@@ -87,13 +87,13 @@ function HomePage() {
   return (
     <main className="page">
       <h1>Alumni Influencer</h1>
-      <p>Register, build your alumni profile, and bid to become Alumni of the Day.</p>
+      <p style={{ marginBottom: '32px' }}>Register, build your alumni profile, and bid to become Alumni of the Day.</p>
 
-      <section className="section">
-        <h2>Featured Alumnus Today</h2>
+      <section className="section" style={{ marginTop: '24px' }}>
+        <h2 style={{ marginBottom: '16px' }}>Featured Alumnus Today</h2>
         {!featuredAlumnus && !error && (
-          <div className="list-section">
-            <p>No winner selected yet for today.</p>
+          <div className="list-section" style={{ padding: '20px' }}>
+            <p style={{ marginBottom: '16px' }}>No winner selected yet for today.</p>
             {upcomingAlumnus ? (
               <FeaturedAlumnusCard
                 alumnus={upcomingAlumnus}
@@ -109,7 +109,7 @@ function HomePage() {
             )}
           </div>
         )}
-        {error && <p>{error}</p>}
+        {error && <p style={{ color: '#c00', marginTop: '8px' }}>{error}</p>}
         {featuredAlumnus && (
           <FeaturedAlumnusCard
             alumnus={featuredAlumnus}

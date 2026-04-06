@@ -55,7 +55,19 @@ async function getMonthlyAppearanceLimit(userId: number) {
 
 router.use(requireAuth);
 
-// GET /bidding/slot
+/**
+ * @swagger
+ * /bidding/slot:
+ *   get:
+ *     tags:
+ *       - Bidding
+ *     summary: Get current bidding slot information
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Bidding slot details
+ */
 router.get('/slot', async (req: Request, res: Response) => {
   const userId = req.session.userId!;
   const windowDate = getTomorrowWindowDate();
@@ -88,7 +100,38 @@ router.get('/slot', async (req: Request, res: Response) => {
   });
 });
 
-// POST /bidding
+/**
+ * @swagger
+ * /bidding:
+ *   post:
+ *     tags:
+ *       - Bidding
+ *     summary: Place a new bid
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               amount:
+ *                 type: number
+ *                 minimum: 0
+ *                 exclusiveMinimum: true
+ *             required:
+ *               - amount
+ *     responses:
+ *       201:
+ *         description: Bid placed successfully
+ *       400:
+ *         description: Validation error
+ *       403:
+ *         description: Monthly appearance limit reached
+ *       409:
+ *         description: Bid already exists for tomorrow
+ */
 router.post('/', async (req: Request, res: Response) => {
   const parsed = placeBidSchema.safeParse({
     amount: Number(req.body?.amount),
@@ -139,7 +182,38 @@ router.post('/', async (req: Request, res: Response) => {
   });
 });
 
-// PATCH /bidding/:id
+/**
+ * @swagger
+ * /bidding/{id}:
+ *   patch:
+ *     tags:
+ *       - Bidding
+ *     summary: Update a pending bid
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               amount:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: Bid updated successfully
+ *       400:
+ *         description: Invalid bid or amount
+ *       404:
+ *         description: Bid not found
+ */
 router.patch('/:id', async (req: Request, res: Response) => {
   const parsedId = bidIdParamSchema.safeParse(req.params);
   const parsedBody = placeBidSchema.safeParse({ amount: Number(req.body?.amount) });
@@ -186,7 +260,29 @@ router.patch('/:id', async (req: Request, res: Response) => {
   res.json({ message: 'Bid updated successfully', bid: updated });
 });
 
-// DELETE /bidding/:id
+/**
+ * @swagger
+ * /bidding/{id}:
+ *   delete:
+ *     tags:
+ *       - Bidding
+ *     summary: Cancel a pending bid
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Bid cancelled successfully
+ *       400:
+ *         description: Only pending bids can be cancelled
+ *       404:
+ *         description: Bid not found
+ */
 router.delete('/:id', async (req: Request, res: Response) => {
   const parsedId = bidIdParamSchema.safeParse(req.params);
   if (!parsedId.success) {

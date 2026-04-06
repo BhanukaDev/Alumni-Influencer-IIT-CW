@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
-import BiddingPage from './pages/BiddingPage'
+import { BrowserRouter, Route, Routes, Link, Navigate } from 'react-router-dom'
 import BackendStatusIndicator from './components/BackendStatus'
+import BiddingPage from './pages/BiddingPage'
+import DeveloperDashboardPage from './pages/DeveloperDashboardPage'
 import EmailVerificationPage from './pages/EmailVerificationPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import HomePage from './pages/HomePage'
@@ -11,28 +13,51 @@ import ResetPasswordPage from './pages/ResetPasswordPage'
 import { getAuthSession, logoutAlumni } from './services/api'
 import './index.css'
 
+function ProtectedRoute({
+  authChecked,
+  isAuthenticated,
+  children,
+}: {
+  authChecked: boolean
+  isAuthenticated: boolean
+  children: React.ReactNode
+}) {
+  if (!authChecked) {
+    return (
+      <main className="page">
+        <h1>Loading</h1>
+        <p>Checking your session...</p>
+      </main>
+    )
+  }
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />
+  }
+  return <>{children}</>
+}
+
 function App() {
   const [authChecked, setAuthChecked] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [currentUserName, setCurrentUserName] = useState('')
   const [currentUserImageUrl, setCurrentUserImageUrl] = useState('')
-  const path = window.location.pathname
 
-  const currentUserInitials = currentUserName
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? '')
-    .join('') || 'U'
+  const currentUserInitials =
+    currentUserName
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() ?? '')
+      .join('') || 'U'
 
   useEffect(() => {
     const checkSession = async () => {
       try {
         const session = await getAuthSession()
         setIsAuthenticated(session.authenticated)
-        setCurrentUserName(session.authenticated ? session.name ?? '' : '')
-        setCurrentUserImageUrl(session.authenticated ? session.imageUrl ?? '' : '')
+        setCurrentUserName(session.authenticated ? (session.name ?? '') : '')
+        setCurrentUserImageUrl(session.authenticated ? (session.imageUrl ?? '') : '')
       } catch {
         setIsAuthenticated(false)
         setCurrentUserName('')
@@ -41,7 +66,6 @@ function App() {
         setAuthChecked(true)
       }
     }
-
     void checkSession()
   }, [])
 
@@ -56,53 +80,15 @@ function App() {
     }
   }
 
-  let page = (
-    <HomePage />
-  )
-
-  const protectedRouteMessage = (
-    <main className="page">
-      <h1>Authentication Required</h1>
-      <p>Please log in to open this page.</p>
-      <p>
-        <a href="/login">Go to login</a>
-      </p>
-    </main>
-  )
-
-  const loadingPage = (
-    <main className="page">
-      <h1>Loading</h1>
-      <p>Checking your session...</p>
-    </main>
-  )
-
-  if (path === '/verify-email') {
-    page = <EmailVerificationPage />
-  } else if (path === '/forgot-password') {
-    page = <ForgotPasswordPage />
-  } else if (path === '/reset-password') {
-    page = <ResetPasswordPage />
-  } else if (path === '/login') {
-    page = <LoginPage />
-  } else if (path === '/register') {
-    page = <RegisterPage />
-  } else if (path === '/bidding') {
-    page = !authChecked ? loadingPage : isAuthenticated ? <BiddingPage /> : protectedRouteMessage
-  } else if (path === '/profile') {
-    page =
-      !authChecked ? loadingPage : isAuthenticated ? <ProfileManagementPage /> : protectedRouteMessage
-  }
-
   return (
-    <>
+    <BrowserRouter>
       <nav className="page" aria-label="Main navigation">
         <BackendStatusIndicator />{' '}
-        <a href="/">Home</a>
+        <Link to="/">Home</Link>
         {!isAuthenticated && (
           <>
             {' '}
-            | <a href="/register">Register</a> | <a href="/login">Login</a>
+            | <Link to="/register">Register</Link> | <Link to="/login">Login</Link>
           </>
         )}
         {isAuthenticated && (
@@ -119,16 +105,50 @@ function App() {
               </span>
               <span>Signed in as {currentUserName || 'User'}</span>
             </span>{' '}
-            | <a href="/profile">Profile</a>{' '}
-            | <a href="/bidding">Bidding</a> |{' '}
+            | <Link to="/profile">Profile</Link>{' '}
+            | <Link to="/bidding">Bidding</Link>{' '}
+            | <Link to="/developer">Developer</Link>{' '}|{' '}
             <button type="button" onClick={onLogout}>
               Logout
             </button>
           </>
         )}
       </nav>
-      {page}
-    </>
+
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/verify-email" element={<EmailVerificationPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route
+          path="/bidding"
+          element={
+            <ProtectedRoute authChecked={authChecked} isAuthenticated={isAuthenticated}>
+              <BiddingPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute authChecked={authChecked} isAuthenticated={isAuthenticated}>
+              <ProfileManagementPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/developer"
+          element={
+            <ProtectedRoute authChecked={authChecked} isAuthenticated={isAuthenticated}>
+              <DeveloperDashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
 

@@ -85,7 +85,21 @@ async function getProfileOr404(userId: number, res: Response) {
 
 router.use(requireAuth);
 
-// GET /profile
+/**
+ * @swagger
+ * /profile:
+ *   get:
+ *     tags:
+ *       - Profile
+ *     summary: Get current user's profile
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: User profile with related data
+ *       404:
+ *         description: Profile not found
+ */
 router.get('/', async (req: Request, res: Response) => {
   const userId = req.session.userId!;
   const profile = await prisma.profile.findUnique({
@@ -107,7 +121,46 @@ router.get('/', async (req: Request, res: Response) => {
   res.json({ profile });
 });
 
-// POST /profile
+/**
+ * @swagger
+ * /profile:
+ *   post:
+ *     tags:
+ *       - Profile
+ *     summary: Create a new profile
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               bio:
+ *                 type: string
+ *                 maxLength: 5000
+ *                 description: Professional biography
+ *               linkedinUrl:
+ *                 type: string
+ *                 format: uri
+ *                 maxLength: 2048
+ *                 description: LinkedIn profile URL
+ *               imageUrl:
+ *                 type: string
+ *                 format: uri
+ *                 maxLength: 2048
+ *                 description: Profile image URL
+ *           example:
+ *             bio: "Full-stack engineer with 10+ years experience"
+ *             linkedinUrl: "https://linkedin.com/in/john-doe"
+ *             imageUrl: "https://example.com/photo.jpg"
+ *     responses:
+ *       201:
+ *         description: Profile created
+ *       409:
+ *         description: Profile already exists
+ */
 router.post('/', async (req: Request, res: Response) => {
   const parsed = profileCreateSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -134,7 +187,40 @@ router.post('/', async (req: Request, res: Response) => {
   res.status(201).json({ message: 'Profile created', profile });
 });
 
-// PATCH /profile
+/**
+ * @swagger
+ * /profile:
+ *   patch:
+ *     tags:
+ *       - Profile
+ *     summary: Update current user's profile
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               bio:
+ *                 type: string
+ *                 maxLength: 5000
+ *                 description: Professional biography
+ *               linkedinUrl:
+ *                 type: string
+ *                 format: uri
+ *                 maxLength: 2048
+ *                 description: LinkedIn profile URL
+ *           example:
+ *             bio: "Updated bio"
+ *             linkedinUrl: "https://linkedin.com/in/jane-smith"
+ *     responses:
+ *       200:
+ *         description: Profile updated
+ *       404:
+ *         description: Profile not found
+ */
 router.patch('/', async (req: Request, res: Response) => {
   const parsed = profileUpdateSchema.safeParse(req.body);
   if (!parsed.success) {

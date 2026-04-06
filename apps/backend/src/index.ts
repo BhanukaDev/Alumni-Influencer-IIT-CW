@@ -6,11 +6,14 @@ import rateLimit from 'express-rate-limit';
 import morgan from 'morgan';
 import session from 'express-session';
 import Database from 'better-sqlite3';
+import swaggerUi from 'swagger-ui-express';
 import { registerBiddingJobs } from './jobs/biddingJobs';
 import prisma from './lib/prisma';
+import { swaggerSpec } from './lib/swagger';
 import { errorHandler, notFound } from './middleware/errorHandler';
 import authRouter from './routes/auth';
 import biddingRouter from './routes/bidding';
+import developerRouter from './routes/developer';
 import profileRouter from './routes/profile';
 import publicRouter from './routes/public';
 
@@ -71,7 +74,11 @@ app.use(
 app.use('/auth', authRouter);
 app.use('/api/v1', publicRouter);
 app.use('/bidding', biddingRouter);
+app.use('/developer', developerRouter);
 app.use('/profile', profileRouter);
+
+app.use('/api-docs', swaggerUi.serve);
+app.get('/api-docs', swaggerUi.setup(swaggerSpec, { explorer: true }));
 
 app.get('/health', async (_req, res) => {
   try {

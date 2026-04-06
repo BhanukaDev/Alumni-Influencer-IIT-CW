@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import prisma from '../lib/prisma';
+import { requireApiKey } from '../middleware/apiKey';
 
 const router = Router();
 
@@ -42,7 +43,31 @@ function mapFeaturedAlumnus(winningBid: {
   };
 }
 
-router.get('/alumni/today', async (_req, res) => {
+/**
+ * @swagger
+ * /api/v1/alumni/today:
+ *   get:
+ *     tags:
+ *       - Public
+ *     summary: Get featured alumnus for today and upcoming day
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Featured alumnus information
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 featuredAlumnus:
+ *                   $ref: '#/components/schemas/FeaturedAlumnus'
+ *                 upcomingAlumnus:
+ *                   $ref: '#/components/schemas/FeaturedAlumnus'
+ *       401:
+ *         description: Missing or invalid API key
+ */
+router.get('/alumni/today', requireApiKey, async (_req, res) => {
   const today = startOfDay(new Date());
   const tomorrow = getTomorrow(today);
 

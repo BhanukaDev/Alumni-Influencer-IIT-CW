@@ -65,7 +65,25 @@ function ProfileManagementPage() {
   }
 
   useEffect(() => {
-    void loadPage()
+    const fetchProfile = async () => {
+      try {
+        setError('')
+        const [loadedProfile, loadedCompletion] = await Promise.all([
+          getMyProfile(),
+          getProfileCompletion(),
+        ])
+        setProfile(loadedProfile)
+        setCompletion(loadedCompletion.completion)
+        setMissing(loadedCompletion.missing)
+        setBio(loadedProfile?.bio ?? '')
+        setLinkedinUrl(loadedProfile?.linkedinUrl ?? '')
+        setImageUrl(loadedProfile?.imageUrl ?? '')
+      } catch (loadError) {
+        const text = loadError instanceof Error ? loadError.message : 'Could not load profile page'
+        setError(text)
+      }
+    }
+    void fetchProfile()
   }, [])
 
   const saveProfile = async () => {
