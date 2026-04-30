@@ -6,10 +6,10 @@ Built for the 6COSC022W Advanced Server-Side coursework. Part 1 is the alumni-fa
 
 ```
 apps/
-├── backend/                  # Express.js + TypeScript + Prisma (port 3000)
+├── backend/                 # Express.js + TypeScript + Prisma (port 3000)
 │   ├── src/
 │   │   ├── routes/           # auth, profile, bidding, developer, public, analytics
-│   │   ├── middleware/       # requireAuth, requireApiKey, requirePermission, errorHandler
+│   │   ├── middleware/      # requireAuth, requireApiKey, requirePermission, errorHandler
 │   │   ├── lib/              # prisma client, email, token generation, swagger
 │   │   ├── jobs/             # node-cron winner selection job
 │   │   └── types/            # express session + request extensions
@@ -18,7 +18,7 @@ apps/
 │       ├── migrations/
 │       └── seed.ts           # demo data
 │
-├── frontend/                 # Alumni app — React + Vite (port 5173)
+├── frontend/                # Alumni app — React + Vite (port 5173)
 │   └── src/
 │       ├── pages/            # Register, Login, Profile, Bidding, Developer
 │       └── services/         # API clients (session-based auth)
