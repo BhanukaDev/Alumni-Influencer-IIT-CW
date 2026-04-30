@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import prisma from '../lib/prisma';
-import { requireApiKey } from '../middleware/apiKey';
+import { requireApiKey, requirePermission } from '../middleware/apiKey';
 
 const router = Router();
 
@@ -67,7 +67,7 @@ function mapFeaturedAlumnus(winningBid: {
  *       401:
  *         description: Missing or invalid API key
  */
-router.get('/alumni/today', requireApiKey, async (_req, res) => {
+router.get('/alumni/today', requireApiKey, requirePermission('read:alumni_of_day'), async (_req, res) => {
   const today = startOfDay(new Date());
   const tomorrow = getTomorrow(today);
 

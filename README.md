@@ -1,329 +1,270 @@
 # Alumni Influencer Platform
 
-A full-stack web application for managing alumni visibility through a competitive bidding system. Built with **Express.js** (backend) and **React** (frontend).
+Built for the 6COSC022W Advanced Server-Side coursework. Part 1 is the alumni-facing platform — profiles, bidding, API key management. Part 2 adds a university analytics dashboard that talks to the same backend through scoped bearer tokens.
 
-## Architecture Overview
+## Architecture
 
 ```
 apps/
-├── backend/          # Express.js + TypeScript + Prisma
+├── backend/                  # Express.js + TypeScript + Prisma (port 3000)
 │   ├── src/
-│   │   ├── routes/           # API endpoints (MVC Controllers)
-│   │   ├── middleware/       # Auth, error handling, API key validation
-│   │   ├── lib/              # Services and utilities
-│   │   ├── jobs/             # Scheduled tasks (winner selection)
-│   │   └── types/            # TypeScript definitions
-│   ├── prisma/               # ORM schema and migrations
-│   └── package.json
+│   │   ├── routes/           # auth, profile, bidding, developer, public, analytics
+│   │   ├── middleware/       # requireAuth, requireApiKey, requirePermission, errorHandler
+│   │   ├── lib/              # prisma client, email, token generation, swagger
+│   │   ├── jobs/             # node-cron winner selection job
+│   │   └── types/            # express session + request extensions
+│   └── prisma/
+│       ├── schema.prisma
+│       ├── migrations/
+│       └── seed.ts           # demo data
 │
-└── frontend/         # React + TypeScript + Vite
-    ├── src/
-    │   ├── pages/            # Route pages
-    │   ├── components/       # Reusable components
-    │   ├── services/         # API clients
-    │   └── types/            # TypeScript definitions
-    └── package.json
+├── frontend/                 # Alumni app — React + Vite (port 5173)
+│   └── src/
+│       ├── pages/            # Register, Login, Profile, Bidding, Developer
+│       └── services/         # API clients (session-based auth)
+│
+└── analytics-dashboard/      # University dashboard — React + Vite (port 5174)
+    └── src/
+        ├── pages/            # Login, Register, Dashboard, Charts, Alumni
+        └── services/         # auth (session) + analytics (API key)
 ```
+
+The two frontends are separate apps with different auth mechanisms. The alumni app uses session cookies. The analytics dashboard gets a scoped API key on first login, stores it in `localStorage`, and uses it for all analytics requests.
 
 ## Tech Stack
 
-**Backend:**
-- Framework: Express.js 5
-- Language: TypeScript
-- Database: SQLite + Prisma ORM
-- Authentication: Express-session (server-side)
-- Security: Helmet, CORS, rate-limiting, bcryptjs
-- Scheduled Jobs: node-cron
-- API Docs: Swagger/OpenAPI
+| Layer | Technology |
+|---|---|
+| Runtime | Node.js 18+ |
+| Backend framework | Express.js 5 + TypeScript |
+| ORM | Prisma 7 (SQLite adapter) |
+| Database | SQLite via better-sqlite3 |
+| Session store | better-sqlite3-session-store |
+| Password hashing | bcryptjs (12 rounds) |
+| Input validation | Zod |
+| Security headers | Helmet |
+| Scheduled jobs | node-cron |
+| API docs | swagger-jsdoc + swagger-ui-express |
+| Frontend | React 18 + TypeScript + Vite |
+| Charts | Chart.js + react-chartjs-2 |
 
-**Frontend:**
-- Framework: React 18
-- Language: TypeScript
-- Build Tool: Vite
-- HTTP Client: Fetch API
+## Setup
 
-## Features
-
-### 1. Authentication System
-- User registration with email verification
-- Secure login with bcrypt (12 rounds)
-- Session-based authentication
-- Password reset flow
-- Email sending via SMTP (configured via `.env`)
-
-### 2. Profile Management
-- User profiles with bio, LinkedIn URL, profile image
-- Career history: degrees, certifications, licenses, courses, employment
-- Profile visibility for alumni directory
-
-### 3. Bidding System
-- Daily bidding slot for featured "Alumni Spotlight"
-- Winning bid selected at 6 PM automatically
-- Monthly appearance limits (3 base, 4 with event bonus)
-- Real-time bid updates and cancellations
-
-### 4. Public API
-- Bearer token authentication via API keys
-- Endpoint: `GET /api/v1/alumni/today` — returns featured alumni
-- Usage logging and statistics tracking
-
-### 5. Developer Dashboard
-- Self-service API key management
-- Generate, revoke, view usage stats per key
-- Last 100 API requests logged per key
-
-### 6. API Documentation
-- Swagger/OpenAPI UI at `/api-docs`
-- Full endpoint documentation with request/response schemas
-- Try-it-out functionality
-
-## Environment Setup
-
-### Prerequisites
-- Node.js 18+ and npm
-- SQLite (included with Prisma)
-
-### Installation
+### 1. Install dependencies
 
 ```bash
-# Clone and install dependencies
 cd apps/backend && npm install
 cd ../frontend && npm install
+cd ../analytics-dashboard && npm install
 ```
 
-### Configuration
+### 2. Configure environment
 
-Create `.env` file in `apps/backend/`:
-
-```env
-# Server
-PORT=3000
-NODE_ENV=development
-
-# Database
-DATABASE_URL="file:./dev.db"
-
-# Session
-SESSION_SECRET="your-secret-key-here"
-
-# Email (SMTP)
-SMTP_HOST=your-smtp-host
-SMTP_PORT=587
-SMTP_USER=your-email
-SMTP_PASS=your-password
-SMTP_FROM=noreply@alumni-platform.local
-
-# Frontend
-ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
-
-# Allowed email domain for registration
-ALLOWED_EMAIL_DOMAIN=iit.ac.lk
-
-# Bidding configuration
-BIDDING_TIMEZONE=Asia/Colombo
-BIDDING_TEST_OFFSET_MINUTES=3  # For testing, comment out in production
-
-# API Configuration
-API_KEY_PREFIX=ak_
-```
-
-## Running the Application
-
-### Backend
 ```bash
-cd apps/backend
-
-# Development (with auto-reload)
-npm run dev
-
-# Production build and run
-npm run build
-npm start
+cp apps/backend/.env.example apps/backend/.env
 ```
 
-Backend runs on `http://localhost:3000`
+Fill in the values — at minimum `SESSION_SECRET`, `EMAIL_*`, and `DATABASE_URL`. See the comments in `.env.example` for what each variable does.
 
-### Frontend
-```bash
-cd apps/frontend
-
-# Development (with Vite dev server)
-npm run dev
-
-# Production build
-npm run build
-
-# Preview production build
-npm run preview
-```
-
-Frontend runs on `http://localhost:5173`
-
-### Database Setup
+### 3. Set up the database
 
 ```bash
 cd apps/backend
-
-# Create/reset database
 npx prisma migrate dev
-
-# View database in browser
-npx prisma studio
 ```
 
-## API Endpoints
+### 4. Seed demo data
 
-### Authentication
-- `POST /auth/register` — Register new user
-- `GET /auth/verify-email?token=...` — Verify email
-- `POST /auth/login` — Login
-- `GET /auth/session` — Get current user
-- `POST /auth/logout` — Logout
-- `POST /auth/forgot-password` — Request password reset
-- `POST /auth/reset-password` — Reset password
+```bash
+cd apps/backend
+npm run seed
+```
 
-### Profile
-- `GET /profile` — Get current user's profile
-- `POST /profile` — Create profile
-- `PATCH /profile` — Update profile
+Creates 18 verified alumni accounts and 1 developer account. All use password `Password123!`. Useful for demoing the analytics charts without manually entering data.
 
-### Bidding
-- `GET /bidding/slot` — Get current bid slot info
-- `POST /bidding` — Place a bid
-- `PATCH /bidding/:id` — Update existing bid
-- `DELETE /bidding/:id` — Cancel bid
+### 5. Start everything
 
-### Developer API
-- `POST /developer/keys` — Create API key
-- `GET /developer/keys` — List user's API keys
-- `GET /developer/keys/:id/stats` — View usage stats
-- `DELETE /developer/keys/:id` — Revoke key
+```bash
+# Terminal 1
+cd apps/backend && npm run dev
 
-### Public API (Bearer token required)
-- `GET /api/v1/alumni/today` — Get featured alumnus (today + tomorrow)
+# Terminal 2
+cd apps/frontend && npm run dev
+
+# Terminal 3
+cd apps/analytics-dashboard && npm run dev
+```
+
+| App | URL |
+|---|---|
+| Backend API | http://localhost:3000 |
+| Alumni platform | http://localhost:5173 |
+| Analytics dashboard | http://localhost:5174 |
+| Swagger docs | http://localhost:3000/api-docs |
+
+## Environment Variables
+
+All in `apps/backend/.env`. See `.env.example` for inline descriptions.
+
+| Variable | Required | Description |
+|---|---|---|
+| `DATABASE_URL` | Yes | SQLite path, e.g. `file:./dev.db` |
+| `PORT` | No | Defaults to `3000` |
+| `NODE_ENV` | No | `development` or `production` |
+| `SESSION_SECRET` | Yes | Random 32+ character string for session cookie signing |
+| `ALLOWED_ORIGINS` | Yes | Comma-separated allowed CORS origins |
+| `ALLOWED_EMAIL_DOMAIN` | Yes | Domain enforced on registration, e.g. `iit.ac.lk` |
+| `FRONTEND_URL` | Yes | Base URL used in verification and reset emails |
+| `BIDDING_TIMEZONE` | Yes | IANA timezone for the winner selection cron, e.g. `Asia/Colombo` |
+| `BIDDING_TEST_OFFSET_MINUTES` | No | Run a test winner selection N minutes after server start (dev only) |
+| `EMAIL_FROM` | Yes | From address for outbound emails |
+| `EMAIL_HOST` | Yes | SMTP host |
+| `EMAIL_PORT` | Yes | SMTP port (587 for TLS) |
+| `EMAIL_USER` | Yes | SMTP username |
+| `EMAIL_PASS` | Yes | SMTP password |
 
 ## Database Schema
 
-**Key Tables:**
-- `User` — Alumni users
-- `Profile` — User profile data
-- `Bid` — Daily bids for featured slot
-- `ApiKey` — Developer API keys
-- `ApiKeyUsageLog` — API call tracking
+Defined in `apps/backend/prisma/schema.prisma`. The schema is in third normal form — no transitive dependencies between non-key attributes.
 
-See [apps/backend/prisma/schema.prisma](apps/backend/prisma/schema.prisma) for full schema.
+### Core models
 
-## Security Features
+| Model | Notes |
+|---|---|
+| `User` | Stores hashed password, email verification token, password reset token. |
+| `Profile` | 1-to-1 with User. Includes `programme`, `graduationYear`, `industrySector` for analytics. |
+| `Degree` | Many-to-1 with Profile. |
+| `Certification` | Many-to-1 with Profile. Powers the skills gap chart. |
+| `Course` | Many-to-1 with Profile. Powers the top tools chart. |
+| `Licence` | Many-to-1 with Profile. |
+| `Employment` | Many-to-1 with Profile. Company, role, start/end date. |
 
-- ✅ Password hashing with bcryptjs (12 rounds)
-- ✅ HTTPS-ready with Helmet
-- ✅ CORS protection
-- ✅ Rate limiting (1000 req/15 min per IP)
-- ✅ Session security (httpOnly, sameSite=strict)
-- ✅ API key hashing (SHA-256)
-- ✅ Email validation (@iit.ac.lk domain)
-- ✅ Password complexity requirements
+### Bidding models
 
-## Automatic Scheduled Tasks
+| Model | Notes |
+|---|---|
+| `Bid` | Daily bid for the featured slot. Status: PENDING / WON / LOST. |
+| `AppearanceRecord` | Monthly win count per user. Enforces the 3-per-month limit. |
 
-- **Winner Selection:** Runs daily at 6 PM (Asia/Colombo timezone)
-  - Selects highest bidder for each day's feature slot
-  - Updates appearance records
+### API key models
 
-## Swagger/OpenAPI Documentation
+| Model | Notes |
+|---|---|
+| `ApiKey` | Stores a SHA-256 hash of the raw key plus a `permissions` JSON array. The raw key is never stored. |
+| `ApiKeyUsageLog` | One row per authenticated request: endpoint, method, timestamp. |
 
-Visit `http://localhost:3000/api-docs` to explore:
-- All available endpoints
-- Request/response schemas
-- Try-it-out interface
-- Authentication requirements
+## API Endpoints
 
-## Project Goals & Completion Status
+### Authentication — `/auth`
 
-| Goal | Feature | Status |
-|------|---------|--------|
-| 1 | Authentication system | ✅ Complete |
-| 2 | Profile management | ✅ Complete |
-| 3 | Bidding system | ✅ Complete |
-| 4 | Winner selection | ✅ Complete |
-| 5 | User dashboard | ✅ Complete |
-| 6 | Winner display on home page | ✅ Complete |
-| 7 | Public API for alumni | ✅ Complete |
-| 8 | User nav with identity | ✅ Complete |
-| 9 | Backend status indicator | ✅ Complete |
-| 10 | API key management | ✅ Complete |
-| 11 | Developer dashboard | ✅ Complete |
-| 12 | Public API gating with bearer tokens | ✅ Complete |
-| 13 | Swagger API documentation | ✅ Complete |
-| 14 | Security hardening | 🟡 Partial |
-| 15 | README & architecture docs | ✅ Complete |
+| Method | Path | Description |
+|---|---|---|
+| POST | `/auth/register` | Register with a university email. Sends a verification email. |
+| GET | `/auth/verify-email?token=` | Verify the email address. |
+| POST | `/auth/login` | Login. Creates a server-side session. |
+| GET | `/auth/session` | Returns current session info. |
+| POST | `/auth/logout` | Destroys the session. |
+| POST | `/auth/forgot-password` | Sends a password reset email. |
+| POST | `/auth/reset-password` | Resets the password with a valid token. |
 
-**Overall Completion:** ~75%
+### Profile — `/profile` (session auth)
 
-## Development Workflow
+| Method | Path | Description |
+|---|---|---|
+| GET | `/profile` | Get own full profile. |
+| POST | `/profile` | Create profile. |
+| PATCH | `/profile` | Update bio, LinkedIn, programme, graduation year, industry sector. |
+| POST | `/profile/image` | Update profile image URL. |
+| GET | `/profile/completion` | Completion percentage and missing sections. |
+| POST/PATCH/DELETE | `/profile/degrees/:id` | CRUD for degrees. |
+| POST/PATCH/DELETE | `/profile/certifications/:id` | CRUD for certifications. |
+| POST/PATCH/DELETE | `/profile/licences/:id` | CRUD for licences. |
+| POST/PATCH/DELETE | `/profile/courses/:id` | CRUD for courses. |
+| POST/PATCH/DELETE | `/profile/employments/:id` | CRUD for employment records. |
 
-### 1. Make Changes
-```bash
-# Edit source files (auto-compiled via TypeScript)
-```
+### Bidding — `/bidding` (session auth)
 
-### 2. Test Locally
-```bash
-# Backend: http://localhost:3000
-# Frontend: http://localhost:5173
-# Swagger Docs: http://localhost:3000/api-docs
-```
+| Method | Path | Description |
+|---|---|---|
+| GET | `/bidding/slot` | View tomorrow's open slot. |
+| POST | `/bidding` | Place a blind bid. |
+| PATCH | `/bidding/:id` | Increase own bid. Decreases are rejected. |
+| DELETE | `/bidding/:id` | Cancel own bid. |
+| GET | `/bidding/status` | Win/lose status for the current window. |
+| GET | `/bidding/history` | Past bids. |
+| GET | `/bidding/monthly-limit` | Remaining slots this month. |
 
-### 3. Build for Production
-```bash
-cd apps/backend && npm run build
-cd apps/frontend && npm run build
-```
+### Developer API keys — `/developer` (session auth)
 
-### 4. Database Migrations
-```bash
-# After schema changes
-cd apps/backend
-npx prisma migrate dev --name description_of_change
-```
+| Method | Path | Description |
+|---|---|---|
+| POST | `/developer/keys` | Generate a new API key with a permissions array. |
+| GET | `/developer/keys` | List own keys. |
+| GET | `/developer/keys/:id/stats` | Usage stats and last 100 request logs. |
+| DELETE | `/developer/keys/:id` | Revoke a key. |
 
-## Troubleshooting
+### Public API — `/api/v1` (bearer token)
 
-### Backend won't start
-- Check PORT 3000 is available
-- Verify DATABASE_URL is correct
-- Run `npx prisma migrate dev` to set up database
+| Method | Path | Permission | Description |
+|---|---|---|---|
+| GET | `/api/v1/alumni/today` | `read:alumni_of_day` | Today's and tomorrow's featured alumnus. |
 
-### Frontend can't connect to backend
-- Ensure backend is running on port 3000
-- Check CORS_ORIGINS in `.env` includes frontend URL
-- Check browser DevTools Network tab for CORS errors
+### Analytics API — `/api/v1/analytics` (bearer token)
 
-### Email not sending
-- Verify SMTP credentials in `.env`
-- Check SMTP port (usually 587 for TLS)
-- Enable "Less secure apps" if using Gmail
+| Method | Path | Permission | Description |
+|---|---|---|---|
+| GET | `/api/v1/analytics/overview` | `read:analytics` | Total counts: alumni, certifications, courses, employments. |
+| GET | `/api/v1/analytics/skills-gap` | `read:analytics` | Top certifications acquired post-graduation, grouped by name. |
+| GET | `/api/v1/analytics/top-courses` | `read:analytics` | Most completed courses. |
+| GET | `/api/v1/analytics/employment-by-sector` | `read:analytics` | Alumni grouped by industry sector. |
+| GET | `/api/v1/analytics/employment-by-role` | `read:analytics` | Alumni grouped by job title. |
+| GET | `/api/v1/analytics/certifications-over-time` | `read:analytics` | Certification volume by month. |
+| GET | `/api/v1/analytics/alumni-by-programme` | `read:analytics` | Alumni grouped by degree programme. |
+| GET | `/api/v1/analytics/alumni-by-graduation-year` | `read:analytics` | Alumni grouped by graduation year. |
+| GET | `/api/v1/analytics/alumni` | `read:alumni` | Full alumni list. Accepts `?programme=`, `?graduationYear=`, `?industrySector=` filters. |
 
-### API key issues
-- Ensure key is formatted as `Bearer ak_xxx` in requests
-- Check key hasn't been revoked in `/developer`
-- Verify request includes proper Authorization header
+## API Key Scoping
 
-## Testing with Postman
+API keys carry a `permissions` array. Hitting an endpoint without the required permission returns `403 Forbidden`. Keys are SHA-256 hashed before storage — the raw key is shown once on creation.
 
-1. **Create API Key:**
-   - POST `http://localhost:3000/developer/keys`
-   - Add Cookie: `sid=<your_session_id>`
-   - Body: `{ "label": "test" }`
+| Client | Permissions | Blocked from |
+|---|---|---|
+| University Analytics Dashboard | `read:alumni`, `read:analytics` | `/api/v1/alumni/today` |
+| Mobile AR App | `read:alumni_of_day` | All analytics endpoints |
 
-2. **Use Key to Call Public API:**
-   - GET `http://localhost:3000/api/v1/alumni/today`
-   - Header: `Authorization: Bearer <raw_key_from_step_1>`
+## Security
 
-## License
+| Feature | Implementation |
+|---|---|
+| Password hashing | bcryptjs, 12 salt rounds |
+| Token generation | `crypto.randomBytes(32)`, hex-encoded, single-use with expiry |
+| API key storage | SHA-256 hash only |
+| Permission enforcement | `requirePermission()` middleware, per endpoint |
+| Input validation | Zod schemas on every route |
+| Security headers | Helmet |
+| CORS | Restricted to `ALLOWED_ORIGINS` |
+| Rate limiting | 1000 requests per 15 minutes per IP |
+| Session cookies | `httpOnly`, `sameSite: strict`, `secure` in production |
+| Email domain check | Registration blocked unless email matches `ALLOWED_EMAIL_DOMAIN` |
 
-Coursework project for IIT.
+## Scheduled Jobs
 
-## Support
+Defined in `src/jobs/biddingJobs.ts`. Runs daily at 18:00 in the configured timezone.
 
-For issues or questions, refer to the Swagger API documentation at `/api-docs` or check the code comments in the source files.
+- Picks the highest bid for each upcoming day's slot
+- Marks the winner `WON`, everyone else `LOST`
+- Increments the winner's monthly appearance count
+- Enforces the 3-per-month limit (4 with event bonus)
+
+In development, a second job fires 3 minutes after startup so winner selection can be tested without waiting until 6 PM.
+
+## Demo Accounts
+
+After `npm run seed`:
+
+| Email | Password | Role |
+|---|---|---|
+| `admin@iit.ac.lk` | `Password123!` | Developer |
+| `ashan.perera@iit.ac.lk` | `Password123!` | Alumni |
+| `dilini.fernando@iit.ac.lk` | `Password123!` | Alumni |
+| *(16 more alumni — see `prisma/seed.ts`)* | `Password123!` | Alumni |

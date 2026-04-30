@@ -41,13 +41,16 @@ model User {
 }
 
 model Profile {
-  id          Int      @id @default(autoincrement())
-  userId      Int      @unique
-  bio         String?
-  linkedinUrl String?
-  imageUrl    String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             Int      @id @default(autoincrement())
+  userId         Int      @unique
+  bio            String?
+  linkedinUrl    String?
+  imageUrl       String?
+  programme      String?
+  graduationYear Int?
+  industrySector String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   degrees      Degree[]
@@ -154,6 +157,7 @@ model ApiKey {
   userId      Int
   keyHash     String    @unique
   label       String
+  permissions String    @default("[]")
   lastUsedAt  DateTime?
   revokedAt   DateTime?
   createdAt   DateTime  @default(now())

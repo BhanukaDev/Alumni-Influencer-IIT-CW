@@ -11,13 +11,19 @@ const idParamSchema = z.object({
 
 const profileCreateSchema = z.object({
   bio: z.string().max(5000).optional(),
-  linkedinUrl: z.string().url().max(2048).optional(),
+  linkedinUrl: z.string().max(2048).optional(),
   imageUrl: z.string().url().max(2048).optional(),
+  programme: z.string().max(255).optional(),
+  graduationYear: z.coerce.number().int().min(1990).max(2100).optional(),
+  industrySector: z.string().max(255).optional(),
 });
 
 const profileUpdateSchema = z.object({
   bio: z.string().max(5000).optional(),
-  linkedinUrl: z.string().url().max(2048).optional(),
+  linkedinUrl: z.string().max(2048).optional(),
+  programme: z.string().max(255).optional(),
+  graduationYear: z.coerce.number().int().min(1990).max(2100).optional(),
+  industrySector: z.string().max(255).optional(),
 });
 
 const profileImageSchema = z.object({
@@ -181,6 +187,9 @@ router.post('/', async (req: Request, res: Response) => {
       bio: parsed.data.bio,
       linkedinUrl: parsed.data.linkedinUrl,
       imageUrl: parsed.data.imageUrl,
+      programme: parsed.data.programme,
+      graduationYear: parsed.data.graduationYear,
+      industrySector: parsed.data.industrySector,
     },
   });
 
@@ -236,6 +245,9 @@ router.patch('/', async (req: Request, res: Response) => {
     data: {
       bio: parsed.data.bio ?? profile.bio,
       linkedinUrl: parsed.data.linkedinUrl ?? profile.linkedinUrl,
+      programme: parsed.data.programme ?? profile.programme,
+      graduationYear: parsed.data.graduationYear ?? profile.graduationYear,
+      industrySector: parsed.data.industrySector ?? profile.industrySector,
     },
   });
 

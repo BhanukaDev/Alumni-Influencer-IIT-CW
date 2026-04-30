@@ -15,6 +15,7 @@ import authRouter from './routes/auth';
 import biddingRouter from './routes/bidding';
 import developerRouter from './routes/developer';
 import profileRouter from './routes/profile';
+import analyticsRouter from './routes/analytics';
 import publicRouter from './routes/public';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -73,6 +74,7 @@ app.use(
 
 app.use('/auth', authRouter);
 app.use('/api/v1', publicRouter);
+app.use('/api/v1/analytics', analyticsRouter);
 app.use('/bidding', biddingRouter);
 app.use('/developer', developerRouter);
 app.use('/profile', profileRouter);

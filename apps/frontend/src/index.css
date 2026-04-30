@@ -65,14 +65,24 @@ nav.page {
 
 .section {
 	border: 1px solid #ddd;
-	padding: 12px;
+	border-radius: 6px;
+	padding: 14px;
 	margin-bottom: 12px;
+}
+
+.section h2 {
+	font-size: 0.95rem;
+	font-weight: 700;
+	color: #111827;
+	margin-bottom: 12px;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
 }
 
 .form {
 	display: grid;
 	gap: 10px;
-	padding: 8px 0;
+	padding: 0;
 }
 
 .form-row {
@@ -86,6 +96,19 @@ nav.page {
 	gap: 10px;
 }
 
+.field {
+	display: grid;
+	gap: 4px;
+}
+
+.field label {
+	font-size: 0.8rem;
+	font-weight: 600;
+	color: #374151;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+}
+
 label {
 	display: grid;
 	gap: 4px;
@@ -96,6 +119,146 @@ textarea,
 button {
 	padding: 8px;
 	font: inherit;
+}
+
+input,
+textarea {
+	border: 1px solid #d1d5db;
+	border-radius: 4px;
+	background: #fff;
+}
+
+input:focus,
+textarea:focus {
+	outline: 2px solid #1f2937;
+	outline-offset: -1px;
+	border-color: transparent;
+}
+
+input.input-error,
+textarea.input-error {
+	border-color: #f87171;
+}
+
+input.input-error:focus,
+textarea.input-error:focus {
+	outline-color: #f87171;
+}
+
+.field-error {
+	font-size: 0.75rem;
+	color: #b91c1c;
+}
+
+button {
+	cursor: pointer;
+	border: 1px solid #d1d5db;
+	border-radius: 4px;
+	background: #1f2937;
+	color: #fff;
+	font-weight: 600;
+}
+
+button:hover {
+	background: #374151;
+}
+
+/* Progress bar */
+.progress-bar-wrap {
+	margin: 6px 0 2px;
+}
+
+.progress-bar-track {
+	background: #e5e7eb;
+	border-radius: 999px;
+	height: 8px;
+	overflow: hidden;
+}
+
+.progress-bar-fill {
+	height: 100%;
+	background: #1f2937;
+	border-radius: 999px;
+	transition: width 0.3s ease;
+}
+
+.progress-bar-label {
+	font-size: 0.8rem;
+	color: #6b7280;
+	margin-top: 4px;
+}
+
+/* Status messages */
+.msg-success {
+	padding: 8px 12px;
+	background: #f0fdf4;
+	border: 1px solid #86efac;
+	border-radius: 4px;
+	color: #166534;
+	font-size: 0.9rem;
+}
+
+.msg-error {
+	padding: 8px 12px;
+	background: #fef2f2;
+	border: 1px solid #fca5a5;
+	border-radius: 4px;
+	color: #991b1b;
+	font-size: 0.9rem;
+}
+
+.missing-note {
+	font-size: 0.8rem;
+	color: #6b7280;
+}
+
+/* Item cards (saved entries) */
+.items-list {
+	display: grid;
+	gap: 6px;
+	margin-top: 12px;
+}
+
+.item-card {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 8px 10px;
+	background: #f9fafb;
+	border: 1px solid #e5e7eb;
+	border-radius: 4px;
+	gap: 8px;
+}
+
+.item-card-text {
+	font-size: 0.9rem;
+	line-height: 1.4;
+}
+
+.item-card-text strong {
+	font-weight: 600;
+}
+
+.item-card-text span {
+	color: #6b7280;
+}
+
+.btn-delete {
+	padding: 4px 10px;
+	font-size: 0.8rem;
+	background: #fff;
+	border: 1px solid #d1d5db;
+	border-radius: 4px;
+	cursor: pointer;
+	color: #b91c1c;
+	font-weight: 500;
+	white-space: nowrap;
+	flex-shrink: 0;
+}
+
+.btn-delete:hover {
+	background: #fef2f2;
+	border-color: #fca5a5;
 }
 
 .list-section {

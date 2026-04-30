@@ -43,6 +43,9 @@ export type Profile = {
   bio?: string | null
   linkedinUrl?: string | null
   imageUrl?: string | null
+  programme?: string | null
+  graduationYear?: number | null
+  industrySector?: string | null
   degrees: Degree[]
   certifications: Certification[]
   licences: Licence[]
@@ -100,6 +103,9 @@ export async function createProfile(payload: {
   bio?: string
   linkedinUrl?: string
   imageUrl?: string
+  programme?: string
+  graduationYear?: number
+  industrySector?: string
 }): Promise<Profile> {
   const response = await fetch(`${API_BASE_URL}/profile`, {
     method: 'POST',
@@ -117,7 +123,7 @@ export async function createProfile(payload: {
   return data.profile
 }
 
-export async function updateProfile(payload: { bio?: string; linkedinUrl?: string }): Promise<Profile> {
+export async function updateProfile(payload: { bio?: string; linkedinUrl?: string; programme?: string; graduationYear?: number; industrySector?: string }): Promise<Profile> {
   const response = await fetch(`${API_BASE_URL}/profile`, {
     method: 'PATCH',
     credentials: 'include',

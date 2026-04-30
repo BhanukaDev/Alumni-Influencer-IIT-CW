@@ -106,7 +106,7 @@ function BiddingPage() {
       {slot && (
         <section className="section">
           <h2>Tomorrow Slot</h2>
-          <p>Window date: {slot.windowDate.slice(0, 10)}</p>
+          <p>Window date: {new Date(slot.windowDate).toLocaleDateString()}</p>
           <p>Closes at: {new Date(slot.closesAt).toLocaleString()}</p>
           <p>Open now: {slot.isOpen ? 'Yes' : 'No'}</p>
         </section>
@@ -170,7 +170,7 @@ function BiddingPage() {
         <ul className="saved-list">
           {history.map((item) => (
             <li key={item.id}>
-              {item.windowDate.slice(0, 10)} - {item.amount} - {item.status}
+              {new Date(item.windowDate).toLocaleDateString()} — {item.amount} — {item.status}
             </li>
           ))}
         </ul>

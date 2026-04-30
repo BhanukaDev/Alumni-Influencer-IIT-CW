@@ -6,6 +6,15 @@ function hashKey(rawKey: string): string {
   return crypto.createHash('sha256').update(rawKey).digest('hex');
 }
 
+function parsePermissions(raw: string): string[] {
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
 export async function requireApiKey(req: Request, res: Response, next: NextFunction): Promise<void> {
   const authHeader = req.headers.authorization;
 
@@ -28,7 +37,6 @@ export async function requireApiKey(req: Request, res: Response, next: NextFunct
     return;
   }
 
-  // update lastUsedAt and log usage without blocking the response
   void prisma
     .$transaction([
       prisma.apiKey.update({
@@ -48,5 +56,16 @@ export async function requireApiKey(req: Request, res: Response, next: NextFunct
     });
 
   req.apiKeyId = apiKey.id;
+  req.apiKeyPermissions = parsePermissions(apiKey.permissions);
   next();
+}
+
+export function requirePermission(permission: string) {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    if (!req.apiKeyPermissions?.includes(permission)) {
+      res.status(403).json({ error: `Missing required permission: ${permission}` });
+      return;
+    }
+    next();
+  };
 }

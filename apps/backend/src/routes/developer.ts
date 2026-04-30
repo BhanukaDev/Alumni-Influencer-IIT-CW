@@ -8,8 +8,14 @@ const router = Router();
 
 router.use(requireAuth);
 
+const VALID_PERMISSIONS = ['read:alumni', 'read:analytics', 'read:alumni_of_day'] as const;
+
 const createKeySchema = z.object({
   label: z.string().trim().min(1, 'Label is required').max(100),
+  permissions: z
+    .array(z.enum(VALID_PERMISSIONS))
+    .min(1, 'At least one permission is required')
+    .default([]),
 });
 
 const keyIdParamSchema = z.object({
@@ -66,6 +72,7 @@ router.post('/keys', async (req: Request, res: Response) => {
       userId,
       label: parsed.data.label,
       keyHash,
+      permissions: JSON.stringify(parsed.data.permissions),
     },
   });
 
